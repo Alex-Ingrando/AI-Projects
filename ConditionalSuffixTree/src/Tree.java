@@ -9,6 +9,8 @@ public class Tree<E> {
 	int dataSize;
 	ArrayList<TreeNode<E>> allPatterns = new ArrayList<TreeNode<E>>();
 	ArrayList<TreeNode<E>> empiricalPatterns = new ArrayList<TreeNode<E>>();
+	ArrayList<TreeNode<E>> conditionalPatterns = new ArrayList<TreeNode<E>>();
+	ArrayList<E> data;
 	
 	Tree(){
 		l = 0;
@@ -17,19 +19,21 @@ public class Tree<E> {
 		dataSize = 0;
 	}
 	
-	Tree(int len, double min, double check){
+	Tree(int len, double min, double check, ArrayList<E> d){
 		l = len;
 		pMin = min;
 		r = check;
+		data = d;
+		dataSize = data.size();
+		
 
 	}
 	
-	void train(ArrayList<E> data) {
+	void train() {
 		
 		ArrayList<E> pattern = new ArrayList<E>();
 		boolean recorded = false;
-		int patternLength = l;
-		dataSize = data.size();
+		int patternLength = l;;
 		
 		//loop for each element of data, extracting patterns from size 1 to size l
 		for(int i = 0; i < data.size(); i ++) {
@@ -53,7 +57,13 @@ public class Tree<E> {
 					//pass pattern at each lengths from 1-l to a new node
 					temp.setCurrentNode(pattern);
 					temp.setTimes(1);
-					allPatterns.add(temp);	
+					//if there are 15 notes, then the possibility for pattern of size one is 15, size 2 is 14
+					temp.setPossibleTimes(dataSize - (pattern.size() - 1));
+					allPatterns.add(temp);
+					//add the element that follows if not the last element
+					if(i + pattern.size() < data.size()) {
+						temp.addFollowing(data.get(i + pattern.size()));
+					}
 					//check current pattern against all existing patterns for connection
 					for(int m = 0; m < allPatterns.size(); m++) {
 						if(checkIfContains(pattern, m) == true) {
@@ -69,6 +79,11 @@ public class Tree<E> {
 					for(int m= 0; m < allPatterns.size(); m++) {
 						match = checkSameNodes(pattern, allPatterns.get(m).getCurrentNode());
 						if(match == true) {
+							//add the element that follows if not the last element
+							if(i + pattern.size() < data.size()) {
+								allPatterns.get(m).addFollowing(data.get(i + pattern.size()));
+							}
+							//update times appeared
 							allPatterns.get(m).setTimes(allPatterns.get(m).getTimes() + 1);
 							break;
 						}
@@ -82,8 +97,8 @@ public class Tree<E> {
 		}
 		checkForOverlappingBranches();
 		eliminatePMin();
+		eliminateConditional();
 	}
-
 
 	
 	boolean checkSameNodes(ArrayList<E> one, ArrayList<E> two) {
@@ -198,56 +213,76 @@ public class Tree<E> {
 	
 	void eliminatePMin() {
 		double nom= 0;
-		double denom = dataSize;
+		double denom = 0;
 		for(int i = 0; i < allPatterns.size(); i ++) {
-			//if the first pattern in the branch
 			if(allPatterns.get(i).getPreceding() == false) {
-				//find the empirical prob of the current node
+				allPatterns.get(i).setEmpiricalPassed(true);
+				empiricalPatterns.add(allPatterns.get(i));
+			} else {
 				nom = allPatterns.get(i).getTimes();
+				denom = allPatterns.get(i).getPossibleTimes();
 				allPatterns.get(i).setEmpirical(nom/denom);
-				//if it is bigger than pMin, add to the arraylist
 				if(allPatterns.get(i).getEmpirical() > pMin) {
+					allPatterns.get(i).setEmpiricalPassed(true);
 					empiricalPatterns.add(allPatterns.get(i));
-					//if it has connections, check those of pMin
-					if(allPatterns.get(i).getConnectedNodes().isEmpty() == false)
-						eliminateConnectedPMin(i, 1);
 				}
 			}
 		}
 	}
 	
-	void eliminateConnectedPMin(int index, int mod) {
-		double nom = 0;
-		double denom = dataSize - mod;
-		//check PMin for each connection
-		for(int i = 0; i < allPatterns.get(index).getConnectedNodes().size(); i++) {
-			nom = allPatterns.get(index).getConnectedNodes().get(i).getTimes();
-			allPatterns.get(index).getConnectedNodes().get(i).setEmpirical(nom/denom);
-			//If it passes, add it the the arraylist
-			if(allPatterns.get(index).getConnectedNodes().get(i).getEmpirical() > pMin) {
-				empiricalPatterns.add(allPatterns.get(index).getConnectedNodes().get(i));
-				
-				//if it has connections
-				if(allPatterns.get(index).getConnectedNodes().get(i).getConnectedNodes().isEmpty() == false) {
-					//find the current nodes location in allPatterns, and then check its connections
-					for(int j = 0; j < allPatterns.size(); j++) {
-						if (checkSameNodes(allPatterns.get(index).getConnectedNodes().get(i).getCurrentNode(), allPatterns.get(j).getCurrentNode()) == true) {
-							eliminateConnectedPMin(j, 1);
-							break;
+	void eliminateConditional() {
+		double temp;
+		for(int i = 0; i < empiricalPatterns.size(); i++) {
+			//have treeNode calculate all conditionals
+			empiricalPatterns.get(i).determineConditionalCompare();
+		}
+		for(int i = 0; i < empiricalPatterns.size(); i ++) {
+			//add all single elements patterns to the conditional
+			if (empiricalPatterns.get(i).getPreceding() == false) {
+				conditionalPatterns.add(empiricalPatterns.get(i));
+				//now check each of its connections
+				for(int j = 0; j < empiricalPatterns.get(i).getConnectedNodes().size(); j++) {
+					//check each conditional of each connected against each conditional of the original if it passed the empirical
+					if(empiricalPatterns.get(i).getConnectedNodes().get(j).empiricalPassed == true) {
+						for(int k = 0; k < empiricalPatterns.get(i).getConnectedNodes().get(j).getFollowing().size(); k++) {
+							for(int m = 0; m < empiricalPatterns.get(i).getFollowing().size(); m++) {
+							
+								//if same following elements for both patterns and the connections has already passed the empirical test
+								if(empiricalPatterns.get(i).getSpecificFollowing(m) == empiricalPatterns.get(i).getConnectedNodes().get(j).getSpecificFollowing(k)) {
+									//calculate da -> b / a -> b
+
+									temp = empiricalPatterns.get(i).getConnectedNodes().get(j).getConditionalCompare(k) / empiricalPatterns.get(i).getConditionalCompare(m);
+									
+									//see if this is the highest conditional
+									if(temp > empiricalPatterns.get(i).getConnectedNodes().get(j).getConditional()) {
+										empiricalPatterns.get(i).getConnectedNodes().get(j).setConditional(temp, k);
+										//System.out.println(empiricalPatterns.get(i).getConnectedNodes().get(j).getCurrentNode() + " has a conditional of " + empiricalPatterns.get(i).getConnectedNodes().get(j).getConditional());
+									}
+									break; //break this loop as match has been found
+								}
 							}
 						}
 					}
+					
+					//highest conditional has been found for this current connectedNode
+					//if it passes r than add to the conditional arrayList
+					if(empiricalPatterns.get(i).getConnectedNodes().get(j).getConditional() >= r && empiricalPatterns.get(i).getConnectedNodes().get(j).empiricalPassed == true) {
+						conditionalPatterns.add(empiricalPatterns.get(i).getConnectedNodes().get(j));
+					}
 				}
 			}
+		}
 	}
-	
+
 	void printAllPatterns(){
+		System.out.println("All patterns for data: " + data);
 		for(int i = 0; i < allPatterns.size(); i++) {
 			System.out.println(allPatterns.get(i).getCurrentNode());
 		}
 	}
 	
 	void printFirstBranch() {
+		System.out.println("All branches for data: " + data);
 		//check each pattern
 		for(int i = 0; i < allPatterns.size(); i++) {
 			//if no precedent i.e. first in line
@@ -278,8 +313,23 @@ public class Tree<E> {
 	}
 	
 	void printEmpirical() {
+		System.out.println("All empirical patterns for data: " + data);
 		for(int i = 0; i < empiricalPatterns.size(); i++) {
 			System.out.println(empiricalPatterns.get(i).getCurrentNode());
+		}
+	}
+	
+	void printFollowing() {
+		System.out.println("All patterns and their following elements for data: " + data);
+		for(int i = 0; i < allPatterns.size(); i++) {
+			System.out.println(allPatterns.get(i).getCurrentNode()+ "is followed by " + allPatterns.get(i).getFollowing());
+		}
+	}
+	
+	void printConditional() {
+		System.out.println("All coniditonal patterns for data: " + data);
+		for(int i = 0; i < conditionalPatterns.size(); i++) {
+			System.out.println(conditionalPatterns.get(i).getCurrentNode());
 		}
 	}
 }
