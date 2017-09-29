@@ -29,13 +29,13 @@ public class MainTree {
 		funTree.train();
 		
 		//print every pattern found
-		funTree.printAllPatterns();
+		//funTree.printAllPatterns();
 		
 		//print each branch and connections
-		funTree.printFirstBranch();
+		//funTree.printFirstBranch();
 		
 		//prints the patterns that have an empirical probability greater than pMin
-		funTree.printEmpirical();
+		//funTree.printEmpirical();
 		
 		//prints the patterns that passed both empirical and conditional test
 		funTree.printConditional();
