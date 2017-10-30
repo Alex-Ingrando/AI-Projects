@@ -8,61 +8,41 @@ public class MainTree {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-		
-		unitTestAbra(3, .1, 2);
-		unitTestPTS(3, .1, 2);
+		double gSmooth = 1.0 / 12.0;
+		unitTestAbra(3, .1, 2, gSmooth);
+		 gSmooth = 1.0 / 18.0;
+		unitTestPTS(3, .1, 2.0, gSmooth);
 		
 	}
 	
-	public static void unitTestAbra(int l, double pMin, double r) {
+	public static void unitTestAbra(int l, double pMin, double r, double g) {
 		
 		ArrayList<Character> data = new ArrayList<Character>();
 		data.addAll(Arrays.asList('a', 'b', 'r', 'a', 'c', 'a', 'd', 'a', 'b', 'r', 'a'));
 		
 		//initialize the tree's for each data
-		Tree<Character> funTree = new Tree<Character>(l, pMin, r, data);
+		Tree<Character> funTree = new Tree<Character>(l, pMin, r, data, g);
 
 		
 		//receives and reads data to determine patterns
 		funTree.train();
 		
-		//print every pattern found
-		//funTree.printAllPatterns();
-		
-		//print each branch and connections
-		//funTree.printFirstBranch();
-		
-		//prints the patterns that have an empirical probability greater than pMin
-		//funTree.printEmpirical();
-		
-		//prints the patterns that passed both empirical and conditional test
-		funTree.printConditional();
-
+		funTree.generate();
 	}
 	
-public static void unitTestPTS(int l, double pMin, double r) {
+public static void unitTestPTS(int l, double pMin, double r, double g) {
 		
 		ArrayList<Character> data = new ArrayList<Character>();
 		data.addAll(Arrays.asList('a', 'b', 'c', 'c', 'c', 'd', 'a', 'a', 'd', 'c', 'd', 'a', 'a', 'b', 'c', 'a', 'd'));
 		
 		//initialize the tree's for each data
-		Tree<Character> funTree = new Tree<Character>(l, pMin, r, data);
+		Tree<Character> funTree = new Tree<Character>(l, pMin, r, data, g);
 
 		
 		//receives and reads data to determine patterns
 		funTree.train();
 		
-		//print every pattern found
-		//funTree.printAllPatterns();
-		
-		//print each branch and connections
-		//funTree.printFirstBranch();
-		
-		//prints the patterns that have an empirical probability greater than pMin
-		//funTree.printEmpirical();
-		
-		//prints the patterns that passed both empirical and conditional test
-		funTree.printConditional();
+		funTree.generate();
 
 	}
 

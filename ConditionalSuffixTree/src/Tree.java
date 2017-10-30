@@ -1,16 +1,20 @@
 //Alexandra Ingrando
 //This class creates the nodes based off of patterns
 import java.util.ArrayList;
+import java.util.*;
 
 public class Tree<E> {
 	int l;
 	double pMin;
 	double r;
 	int dataSize;
+	double g;
 	ArrayList<TreeNode<E>> allPatterns = new ArrayList<TreeNode<E>>();
 	ArrayList<TreeNode<E>> empiricalPatterns = new ArrayList<TreeNode<E>>();
 	ArrayList<TreeNode<E>> conditionalPatterns = new ArrayList<TreeNode<E>>();
+	ArrayList<E> generated = new ArrayList<E>();
 	ArrayList<E> data;
+	TreeNode<E> root = new TreeNode<E>();
 	
 	Tree(){
 		l = 0;
@@ -19,317 +23,288 @@ public class Tree<E> {
 		dataSize = 0;
 	}
 	
-	Tree(int len, double min, double check, ArrayList<E> d){
+	Tree(int len, double min, double check, ArrayList<E> d, double gSmooth){
 		l = len;
 		pMin = min;
 		r = check;
 		data = d;
 		dataSize = data.size();
-		
+		g = gSmooth;
 
 	}
 	
 	void train() {
-		
+		boolean recorded;
+		int patternLength;
+		E follow;
 		ArrayList<E> pattern = new ArrayList<E>();
-		boolean recorded = false;
-		int patternLength = l;;
+		ArrayList<E> singles = new ArrayList<E>();
+		for(int i = 0; i < l; i++) {
+			patternLength = i + 1;
+			//System.out.println("Searching for patterns of size " + patternLength);
+			for(int j = 0; j < data.size(); j++) {
+				if (j + patternLength <= data.size()) {
+					recorded = false;
+					follow = null;
+					
+					for(int h = 0; h < patternLength; h++) {
+						pattern.add(data.get(j + h));
+					}
+					if (j + patternLength < data.size()) {
+						follow = data.get(j + patternLength);
+					}
+					
+					recorded = checkRecord(pattern, root, follow);
+					//System.out.println(pattern);
+					if(recorded != true) {
+						addTreeNode(pattern, root, 1, follow, singles);
+						
+					}
+					
+				}
+				pattern.clear();
+			}
+			//finished finding all one length elements
+			if(i == 0) {
+				for(int j = 0; j < root.getConnectedNodes().size(); j++) {
+					singles.add(root.getConnectedNodes().get(j).getCurrentNode().get(0));
+				}
+				for(int j = 0; j < root.getConnectedNodes().size(); j++) {
+					root.getConnectedNodes().get(j).resetFollowing(singles);
+				}
+			}
+		}
+		System.out.println("All patterns");
+		printTree(root, "");
 		
-		//loop for each element of data, extracting patterns from size 1 to size l
-		for(int i = 0; i < data.size(); i ++) {
+		System.out.println("Empirical Patterns");
+		root.testEmpirical(pMin, data.size());
+		printTree(root, "");
+		
+		System.out.println("Conditional Patterns");
+		root.testConditional(r);
+		printTree(root, "");
+	}
+	
+	void generate() {
+		root.smooth(g, dataSize);
+		TreeNode<E> lastNode = null;
+		TreeNode<E> currentNode = null;
+		E seed = root.getSeed();
+		E current = seed;
+		
+		generated.add(seed);
+		
+		boolean infinite;
+
+		Random rand = new Random();
+		int counter = 0;
+		while(counter < 20) {
+			counter++;
 			
-			//boundary check
-			if(patternLength + i > data.size()) patternLength--;
-
-			for(int j = 0; j < patternLength; j++) {
-				//create a new node for each one of the pattern
-				TreeNode<E> temp = new TreeNode<E>();
-				
-				//add elements to pattern until of size l
-				pattern.add(data.get(i + j));
-				
-				//check to see if the pattern already exists
-				recorded = checkRecorded(pattern);
-
-				
-				//if the pattern does not exist yet
-				if (recorded == false) {	
-					//pass pattern at each lengths from 1-l to a new node
-					temp.setCurrentNode(pattern);
-					temp.setTimes(1);
-					//if there are 15 notes, then the possibility for pattern of size one is 15, size 2 is 14
-					temp.setPossibleTimes(dataSize - (pattern.size() - 1));
-					allPatterns.add(temp);
-					//add the element that follows if not the last element
-					if(i + pattern.size() < data.size()) {
-						temp.addFollowing(data.get(i + pattern.size()));
+			//find the seed/currentPattern's matching node
+			//if no match is found, will return null
+			
+			ArrayList<E> pattern = new ArrayList<E>();
+			currentNode = null;
+			
+			//checking the biggest possible patterns first, if found it will break, but if it returns null
+			//thus not found, it will decrease the pattern size
+			for(int i = l; i > 0 && currentNode == null; i--) {
+				pattern.clear();
+				if(generated.size() >= i) {
+					for(int j = i; j > 0; j--) {
+						pattern.add(generated.get(generated.size() - j));
 					}
-					//check current pattern against all existing patterns for connection
-					for(int m = 0; m < allPatterns.size(); m++) {
-						if(checkIfContains(pattern, m) == true) {
-							allPatterns.get(m).addConnectedNode(temp);
-							temp.setPreceding(true);
-						} if(checkIfContained(pattern, m) == true) {
-							temp.addConnectedNode(allPatterns.get(m));
-							allPatterns.get(m).setPreceding(true);
-						}
-					}
-				} else {
-					boolean match = false;
-					for(int m= 0; m < allPatterns.size(); m++) {
-						match = checkSameNodes(pattern, allPatterns.get(m).getCurrentNode());
-						if(match == true) {
-							//add the element that follows if not the last element
-							if(i + pattern.size() < data.size()) {
-								allPatterns.get(m).addFollowing(data.get(i + pattern.size()));
-							}
-							//update times appeared
-							allPatterns.get(m).setTimes(allPatterns.get(m).getTimes() + 1);
-							break;
-						}
-					}
+					currentNode = matchNode(pattern, root);
 				}
+			}
+
+			
+			//if no match found, and thus can't find the next element, rollback or generate from empty
+			if (currentNode == null) {
+				//determine if generate from empty or rollback
+				int emptyContext = rand.nextInt(5);
 					
-
+				//generate from empty (check for if not possible to rollback)
+				if(emptyContext <= 3 || lastNode != null) {
+					pattern.clear();
+					current = root.getSeed();
+					pattern.add(current);
+					currentNode = matchNode(pattern, root);
+					System.out.println("EmptyContext");
+				} else if (emptyContext > 3) { //rollback to the last recordedNode
+					currentNode = lastNode;
+					System.out.println("RollBack");
+				}		
 			}
-			//clear pattern to prepare for the next element
-			pattern.clear();
-		}
-		checkForOverlappingBranches();
-		eliminatePMin();
-		eliminateConditional();
-	}
-
-	
-	boolean checkSameNodes(ArrayList<E> one, ArrayList<E> two) {
-		boolean same = false;
-		
-		//if same size
-		if(one.size() == two.size()) {
-			//check each element of node
-			for(int i = 0; i < one.size(); i++) {
-				//if difference break the loop
-				if(one.get(i) != two.get(i)) break;
-				//if last element, and still in the loop, they are the same
-				else if(i + 1 == one.size()) same = true;
-			}
-		}
-		
-		return same;
-	}
-	
-	boolean checkRecorded(ArrayList<E> pattern) {
-		boolean found = false;
-		
-		for(int k= 0; k < allPatterns.size(); k++) {
-			found = checkSameNodes(allPatterns.get(k).getCurrentNode(), pattern);
-			if(found == true) break;
-		}
-		
-		return found;
-	}
-	
-	//pattern is ada and previous pattern is a
-	boolean checkIfContains(ArrayList<E> pattern, int i) {
-		boolean connect = false;
-		//if pattern could contain a previous pattern
-		if(pattern.size() > allPatterns.get(i).getCurrentNode().size()) {
-			int temp = allPatterns.get(i).getCurrentNode().size();
-			//check the end of the pattern to see if it holds a previous pattern
-			for(int j = 0; j < allPatterns.get(i).getCurrentNode().size() ; j++) {
-				//comparing a & da / da & ada, if false stop checking
-				if(allPatterns.get(i).getPatternParts(j) != pattern.get((pattern.size()) - temp)) {
-						break;
-				} 
-				//if last loop ending, and still have not broken than they are connected
-				else if (j +1 == allPatterns.get(i).getCurrentNode().size()) {	
-					connect = true;
-				}
-				temp--;
-			}
-		}
-		return connect;
-	}
-	
-	//pattern is b and previous pattern is rb
-	boolean checkIfContained(ArrayList<E> pattern, int i) {
-		boolean connect = false;
-		//if pattern could be contained by a previous pattern
-		if(pattern.size() < allPatterns.get(i).getCurrentNode().size()) {
-			int temp = pattern.size();
-			//check the end of the pattern to see if it holds a previous pattern
-			for(int j = 0; j < pattern.size() ; j++) {
-				//comparing a & da / da & ada, if false stop checking
-				if(pattern.get(j) != allPatterns.get(i).getPatternParts((allPatterns.get(i).getCurrentNode().size()) - temp)) {
-						break;
-				} 
-				//if last loop ending, and still have not broken than they are connected
-				else if (j +1 == pattern.size()) {	
-					connect = true;
-				}
-				temp--;
-			}
-		}
-		return connect;
-	}
-	
-
-	
-	void checkForOverlappingBranches() {
-		
-		boolean delete = false;
-		ArrayList<TreeNode<E>> temp = new ArrayList<TreeNode<E>>();
-		//check for each pattern
-		for(int i = 0; i < allPatterns.size(); i++) {
-			//if the pattern has connections
-			if(allPatterns.get(i).getConnectedNodes().isEmpty() == false) {
-				//check each connection
-				for(int j = 0; j < allPatterns.get(i).getConnectedNodes().size(); j++) {
-					//if connected node also has connections
-					if(allPatterns.get(i).getConnectedNodes().get(j).getConnectedNodes().isEmpty() == false) {
-						//store the elements it is connected to 
-						temp = allPatterns.get(i).getConnectedNodes().get(j).getConnectedNodes();
-						delete = true;
+			
+			//when the matching node is found to generate the next one, generate and store the node generated from
+			current = currentNode.getNext();
+			lastNode = currentNode;
+			
+			ArrayList<E> recurring = new ArrayList<E>();
+			int patternSize;
+			for(int i = 0; i < l; i++) {
+				recurring.clear();
+				//2 for length 1, 5 for length 2, etc
+				if(generated.size() > 2 + (3 * i)) {
+					for(int j = i; j > 0; j--) {
+						recurring.add(generated.get(generated.size() - j));
 					}
-					//if connection was found
-					if(delete == true) {
-						//for each node it is connected to
-						for(int m = 0; m < temp.size(); m++) {
-							//check it until duplicated connection is found
-							for(int k = 0; k < allPatterns.get(i).getConnectedNodes().size(); k++) {
-								//delete when found
-								if(checkSameNodes(allPatterns.get(i).getConnectedNodes().get(k).getCurrentNode(), temp.get(m).getCurrentNode()) == true)
-									allPatterns.get(i).deleteConnection(k);
-								
-							}
+					recurring.add(current);
+					infinite = checkInfiniteLooping(recurring, (i + 1), 2);
+					if(infinite == true) {
+						//compare current to last element of recurring as it is the element yet to be added
+						while(current == recurring.get(recurring.size() - 1)) {
+							currentNode = lastNode;
+							current = currentNode.getNext();
 						}
 					}
 				}
-				
 			}
-			delete = false;
+			
+			generated.add(current);
 		}
+		
+		System.out.println(generated);
 	}
 	
-	void eliminatePMin() {
-		double nom= 0;
-		double denom = 0;
-		for(int i = 0; i < allPatterns.size(); i ++) {
-			if(allPatterns.get(i).getPreceding() == false) {
-				allPatterns.get(i).setEmpiricalPassed(true);
-				empiricalPatterns.add(allPatterns.get(i));
-			} else {
-				nom = allPatterns.get(i).getTimes();
-				denom = allPatterns.get(i).getPossibleTimes();
-				allPatterns.get(i).setEmpirical(nom/denom);
-				if(allPatterns.get(i).getEmpirical() > pMin) {
-					allPatterns.get(i).setEmpiricalPassed(true);
-					empiricalPatterns.add(allPatterns.get(i));
+	
+	TreeNode<E> matchNode(ArrayList<E> pattern, TreeNode<E> base){
+		TreeNode<E> match = null;
+		int compareSize;
+		boolean recorded;
+		int patternSize;
+		//check each of the connected nodes of the base to see if pattern matches, or is contained
+		for(int i = 0; i < base.getConnectedNodes().size(); i++) {
+			//compare each element of the pattern from the bottom to see if it is same/suffixed
+			compareSize = base.getConnectedNodes().get(i).getCurrentNode().size() - 1;
+			patternSize = pattern.size() - 1; 
+			for(int j = 0; j < base.getConnectedNodes().get(i).getCurrentNode().size(); j++) {
+				//breaks out of inner for loop to go back to outer for loop since a letter in current compare does not match
+				if(pattern.get(patternSize - j).equals(base.getConnectedNodes().get(i).getCurrentNode().get(compareSize - j)) == false) {
+					break;
 				}
-			}
-		}
-	}
-	
-	void eliminateConditional() {
-		double temp;
-		for(int i = 0; i < empiricalPatterns.size(); i++) {
-			//have treeNode calculate all conditionals
-			empiricalPatterns.get(i).determineConditionalCompare();
-		}
-		for(int i = 0; i < empiricalPatterns.size(); i ++) {
-			//add all single elements patterns to the conditional
-			if (empiricalPatterns.get(i).getPreceding() == false) {
-				conditionalPatterns.add(empiricalPatterns.get(i));
-				//now check each of its connections
-				for(int j = 0; j < empiricalPatterns.get(i).getConnectedNodes().size(); j++) {
-					//check each conditional of each connected against each conditional of the original if it passed the empirical
-					if(empiricalPatterns.get(i).getConnectedNodes().get(j).empiricalPassed == true) {
-						for(int k = 0; k < empiricalPatterns.get(i).getConnectedNodes().get(j).getFollowing().size(); k++) {
-							for(int m = 0; m < empiricalPatterns.get(i).getFollowing().size(); m++) {
-							
-								//if same following elements for both patterns and the connections has already passed the empirical test
-								if(empiricalPatterns.get(i).getSpecificFollowing(m) == empiricalPatterns.get(i).getConnectedNodes().get(j).getSpecificFollowing(k)) {
-									//calculate da -> b / a -> b
-
-									temp = empiricalPatterns.get(i).getConnectedNodes().get(j).getConditionalCompare(k) / empiricalPatterns.get(i).getConditionalCompare(m);
-									
-									//see if this is the highest conditional
-									if(temp > empiricalPatterns.get(i).getConnectedNodes().get(j).getConditional()) {
-										empiricalPatterns.get(i).getConnectedNodes().get(j).setConditional(temp, k);
-										//System.out.println(empiricalPatterns.get(i).getConnectedNodes().get(j).getCurrentNode() + " has a conditional of " + empiricalPatterns.get(i).getConnectedNodes().get(j).getConditional());
-									}
-									break; //break this loop as match has been found
-								}
-							}
-						}
-					}
-					
-					//highest conditional has been found for this current connectedNode
-					//if it passes r than add to the conditional arrayList
-					if(empiricalPatterns.get(i).getConnectedNodes().get(j).getConditional() >= r && empiricalPatterns.get(i).getConnectedNodes().get(j).empiricalPassed == true) {
-						conditionalPatterns.add(empiricalPatterns.get(i).getConnectedNodes().get(j));
+				//if last iteration and loop has not broken yet
+				if(j == compareSize) {
+					//if same length and thus same pattern
+					if(patternSize == compareSize) {
+						recorded = true;
+						match = base.getConnectedNodes().get(i);
+					} else {
+						match = matchNode(pattern, base.getConnectedNodes().get(i));
 					}
 				}
 			}
 		}
-	}
-
-	void printAllPatterns(){
-		System.out.println("All patterns for data: " + data);
-		for(int i = 0; i < allPatterns.size(); i++) {
-			System.out.println(allPatterns.get(i).getCurrentNode());
-		}
+		return match;
 	}
 	
-	void printFirstBranch() {
-		System.out.println("All branches for data: " + data);
-		//check each pattern
-		for(int i = 0; i < allPatterns.size(); i++) {
-			//if no precedent i.e. first in line
-			if(allPatterns.get(i).getPreceding() == false) {
-				System.out.println(allPatterns.get(i).getCurrentNode());
-				//if there is connections, print the connections
-				if(allPatterns.get(i).getConnectedNodes().isEmpty() == false) {
-					printConnected(i, "--");
+	boolean checkInfiniteLooping(ArrayList<E> pattern, int patternSize, int maxRepeat) {
+		//recurring is the last pattern in the currently generated
+
+		ArrayList<E> checkAgainst = new ArrayList<E>();
+		boolean infinite = true;
+		
+		//start checking from the end
+		int currentIndex = generated.size() - (patternSize + (patternSize - 1));
+		for(int i = 0; i < maxRepeat && infinite == true; i++) {
+			checkAgainst.clear();
+			for(int j = 0; j < patternSize; j++) {
+				checkAgainst.add(generated.get(currentIndex + j));
+			}
+
+			for(int j = 0; j < patternSize; j++) {
+				if(checkAgainst.get(j).equals(pattern.get(j)) == false) {
+					infinite = false;
+				}
+			}
+			currentIndex = currentIndex - patternSize;
+		}
+		
+		return infinite;
+	}
+	
+	boolean checkRecord(ArrayList<E> pattern, TreeNode<E> base, E follow) {
+		boolean recorded = false;
+		int compareSize;
+		int patternSize;
+		//check each of the connected nodes of the base to see if pattern matches, or is contained
+		for(int i = 0; i < base.getConnectedNodes().size(); i++) {
+			//compare each element of the pattern from the bottom to see if it is same/suffixed
+			compareSize = base.getConnectedNodes().get(i).getCurrentNode().size() - 1;
+			patternSize = pattern.size() - 1; 
+			for(int j = 0; j < base.getConnectedNodes().get(i).getCurrentNode().size(); j++) {
+				//breaks out of inner for loop to go back to outter for loop since a letter in current compare does not match
+				if(pattern.get(patternSize - j).equals(base.getConnectedNodes().get(i).getCurrentNode().get(compareSize - j)) == false) {
+					break;
+				}
+				//if last iteration and loop has not broken yet
+				if(j == compareSize) {
+					//if same length and thus same pattern
+					if(patternSize == compareSize) {
+						recorded = true;
+						base.getConnectedNodes().get(i).setTimes(base.getConnectedNodes().get(i).getTimes() + 1);
+						base.getConnectedNodes().get(i).addFollowing(follow);
+					} else {
+						recorded = checkRecord(pattern, base.getConnectedNodes().get(i), follow);
+					}
 				}
 			}
 		}
+		return recorded;
 	}
-	void printConnected(int index, String arrow) {
-		//print each node that is connected
-		for(int i = 0; i < allPatterns.get(index).getConnectedNodes().size(); i++) {
-			System.out.println(arrow + allPatterns.get(index).getConnectedNodes().get(i).getCurrentNode());
-			//if node has connections
-			if(allPatterns.get(index).getConnectedNodes().get(i).getConnectedNodes().isEmpty() == false) {
-				//find the current nodes location in allPatterns, and then print its connections
-				for(int j = 0; j < allPatterns.size(); j++) {
-					if (checkSameNodes(allPatterns.get(index).getConnectedNodes().get(i).getCurrentNode(), allPatterns.get(j).getCurrentNode()) == true) {
-						printConnected(j, arrow + "--");
+	
+	void addTreeNode(ArrayList<E> pattern, TreeNode<E> base, int len, E follow, ArrayList<E> singles) {	
+		if(pattern.size() == len) {
+			ArrayList<Double> empty = new ArrayList<Double>();
+			for(int i = 0; i < singles.size(); i++) {
+				empty.add(0.0);
+			}
+			TreeNode<E> temp = new TreeNode<E>();
+			temp.setCurrentNode(pattern);
+			temp.setTimes(1.0);
+			if(singles.isEmpty() == false) {
+				temp.setFollowing(singles);
+				temp.setAppearance(empty);
+			}
+			temp.addFollowing(follow);
+			base.addConnectedNode(temp);
+			
+		} else {
+			int compareSize;
+			int patternSize;
+			for(int i = 0; i < base.getConnectedNodes().size(); i++) {
+				//compare each element of the pattern from the bottom to see if it is same/suffixed
+				compareSize = base.getConnectedNodes().get(i).getCurrentNode().size() - 1;
+				patternSize = pattern.size() - 1; 
+				for(int j = 0; j < base.getConnectedNodes().get(i).getCurrentNode().size(); j++) {
+					if(pattern.get(patternSize - j).equals(base.getConnectedNodes().get(i).getCurrentNode().get(compareSize - j)) == false) {
 						break;
 					}
+					//if last iteration and loop has not broken yet
+					if(j == compareSize) {
+						//recursive function adding to the length each time
+						addTreeNode(pattern, base.getConnectedNodes().get(i), len + 1, follow, singles);
+					}
 				}
 			}
 		}
 	}
 	
-	void printEmpirical() {
-		System.out.println("All empirical patterns for data: " + data);
-		for(int i = 0; i < empiricalPatterns.size(); i++) {
-			System.out.println(empiricalPatterns.get(i).getCurrentNode());
+	void printTree(TreeNode<E> base, String tab) {
+		String add = "--";
+		add += tab;
+		for(int i = 0; i < base.getConnectedNodes().size(); i++) {
+			System.out.println(tab + base.getConnectedNodes().get(i).getCurrentNode());
+			//if it has connections call the recursive function
+			if(base.getConnectedNodes().get(i).getConnectedNodes().isEmpty() == false) {
+				printTree(base.getConnectedNodes().get(i), add);
+			}
 		}
 	}
 	
-	void printFollowing() {
-		System.out.println("All patterns and their following elements for data: " + data);
-		for(int i = 0; i < allPatterns.size(); i++) {
-			System.out.println(allPatterns.get(i).getCurrentNode()+ "is followed by " + allPatterns.get(i).getFollowing());
-		}
-	}
-	
-	void printConditional() {
-		System.out.println("All coniditonal patterns for data: " + data);
-		for(int i = 0; i < conditionalPatterns.size(); i++) {
-			System.out.println(conditionalPatterns.get(i).getCurrentNode());
-		}
-	}
 }
+
+	
