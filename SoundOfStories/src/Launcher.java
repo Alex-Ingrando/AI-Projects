@@ -66,12 +66,12 @@ public class Launcher extends PApplet{
 		
 		//Unit Tests
 		//unitTestWordsAdded();
-		unitTestGrammar();
+		//unitTestGrammar();
 	}
 	
 	public void draw() {
-		
-		background(255);
+		unitTestMusic();
+		/*background(255);
 		image(bg, 0, 0, displayWidth, displayHeight);
 		if(menu == true)
 			displayMenu();
@@ -79,7 +79,7 @@ public class Launcher extends PApplet{
 			displayInteraction();
 		if(playStory == true) {
 			displayStory();
-		}
+		}*/
 		
 	}
 	
@@ -356,6 +356,7 @@ public class Launcher extends PApplet{
 	}
 	
 	public void unitTestGrammar() {
+		sentence.addSubject("Bob");
 		ArrayList<Word> temp = sentence.getSentence();
 		for(int i = 0; i < temp.size(); i++) {
 			System.out.println(temp.get(i).getWord());
@@ -369,6 +370,8 @@ public class Launcher extends PApplet{
 			System.out.println(temp.get(i).getWord());
 		}
 		sentence.clearNouns();
+		sentence.clearSubject();
+		sentence.addSubject("Bob");
 		temp = sentence.getSentence();
 		for(int i = 0; i < temp.size(); i++) {
 			System.out.println(temp.get(i).getWord());
@@ -380,6 +383,51 @@ public class Launcher extends PApplet{
 		temp = sentence.getSentence();
 		for(int i = 0; i < temp.size(); i++) {
 			System.out.println(temp.get(i).getWord());
+		}
+		sentence.clearNouns();
+		sentence.clearSubject();
+		
+	}
+	
+	public void unitTestMusic() {
+		Word abc = new Word("", "", "abc");
+		int time = 0;
+		if(time == 0) {
+			for(int i = 0; i < abc.getNumSyllables(); i++) {
+				System.out.println(abc.getSyllables()[i]);
+				mChannels[0].noteOn(abc.getSyllableNotes()[i], 100);
+				System.out.println("note on");
+				try { Thread.sleep(1000); // wait time in milliseconds to control duration
+		        } catch( InterruptedException e ) { }
+				mChannels[0].noteOff(abc.getSyllableNotes()[i]);
+				System.out.println("note off");
+			}
+			time++;
+		}
+		if(time == 1) {
+			Word abcd = new Word("", "", "abcd");
+			for(int i = 0; i < abcd.getNumSyllables(); i++) {
+				System.out.println(abcd.getSyllables()[i]);
+				mChannels[0].noteOn(abcd.getSyllableNotes()[i], 100);
+				System.out.println("note on");
+				try { Thread.sleep(1000); // wait time in milliseconds to control duration
+		        } catch( InterruptedException e ) { }
+				mChannels[0].noteOff(abcd.getSyllableNotes()[i]);
+				System.out.println("note off");
+			}
+			time++;
+		}
+		if(time == 2) {
+			Word abcde = new Word("", "", "abc-de");
+			for(int i = 0; i < abcde.getNumSyllables(); i++) {
+				System.out.println(abcde.getSyllables()[i]);
+				mChannels[0].noteOn(abcde.getSyllableNotes()[i], 100);
+				System.out.println("note on");
+				try { Thread.sleep(1000); // wait time in milliseconds to control duration
+		        } catch( InterruptedException e ) { }
+				mChannels[0].noteOff(abcde.getSyllableNotes()[i]);
+				System.out.println("note off");
+			}
 		}
 		
 	}
