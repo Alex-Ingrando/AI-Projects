@@ -42,7 +42,7 @@ public class Launcher extends PApplet{
 	public void setup() {
 		bg = loadImage("paper.jpg");
 		sentence = new Sentence();
-		File file = new File("C:\\Users\\alexa\\Desktop\\CRCP3330\\CRCP3330\\FinalProject\\bin\\words.txt");
+		File file = new File("words.txt");
 		sentence.readFile(file);
 				
 		font = createFont("Bradley Hand ITC",10,true);
@@ -70,8 +70,8 @@ public class Launcher extends PApplet{
 	}
 	
 	public void draw() {
-		unitTestMusic();
-		/*background(255);
+		//unitTestMusic();
+		background(255);
 		image(bg, 0, 0, displayWidth, displayHeight);
 		if(menu == true)
 			displayMenu();
@@ -79,7 +79,7 @@ public class Launcher extends PApplet{
 			displayInteraction();
 		if(playStory == true) {
 			displayStory();
-		}*/
+		}
 		
 	}
 	
@@ -98,7 +98,10 @@ public class Launcher extends PApplet{
 		}
 		if(key == ' ' && playStory == true) {
 			printSentences.clear();
+			
 			story.clear();
+			sentence.clearSubject();
+			sentence.clearNouns();
 			playStory = false;
 			menu = true;
 			
@@ -225,7 +228,6 @@ public class Launcher extends PApplet{
 			}
 		} else {
 			//story has ended, prompt user to start again
-			sentence.clearSubject();
 			textAlign(RIGHT);
 			text("Press SPACE to start over.", displayWidth - 10, displayHeight - 55);
 		}

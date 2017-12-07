@@ -1,0 +1,277 @@
+conj
+begin
+ as
+ while
+ af-ter
+ be-cause
+ be-fore
+ since
+ when
+ when-e-ver
+1
+conj
+middle
+ and
+ but
+ or
+ as
+ while
+ af-ter
+ be-cause
+ be-fore
+ since
+ when
+ when-e-ver
+1
+article
+animate
+ the
+ a
+ an
+1
+article
+inanimate
+ the
+ a
+ an
+1
+article
+place
+ the
+ a
+ an
+1
+noun
+animate
+ per-son
+ cat
+ dog
+ ch-i-ld
+ boy-fri-end
+ fri-end
+ girl-fri-end
+ boy
+ girl
+ la-dy
+ man
+ wo-man
+ hus-ban-d
+ wi-fe
+ tur-tle
+ fish
+ bear
+ bir-d
+ kid
+ daugh-ter
+ son
+ ath-le-te
+ doc-tor
+ tea-cher
+ den-tist
+ hu-man
+ ac-coun-tant
+ sai-lor
+ ea-gle
+ hawk
+ shar-k
+ squi-d
+ cou-ple
+ pa-rent
+ pro-fess-or
+ dri-ver
+ pe-de-stri-an
+ pet
+ pan-da
+1
+noun
+inanimate
+ app-le
+ or-an-ge
+ le-mon
+ fan
+ car
+ bla-ket
+ bag
+ pen-cil
+ pa-per
+ shoe
+ shir-t
+ toy
+ pho-ne
+ com-pu-ter
+ bed
+ cou-ch
+ bowl
+ pla-te
+ hat
+ pre-sent
+ kni-fe
+ sun-gl-ass-es
+ book
+ mag-a-zine
+ news-pa-per
+ lap-top
+ tel-e-vi-sion
+ o-ven
+ ba-na-na
+ ball
+ mar-ble
+ it
+1
+noun
+place
+ ho-me
+ house
+ school
+ bea-ch
+ ca-fe-ter-i-a
+ bed-room
+ gym
+ bath-room
+ class-room
+ bus- station
+ air-port
+ for-est
+ lake
+ ci-ty
+ coun-try
+ pool
+ mall
+ gar-age
+ ki-tch-en
+ po-nd
+1
+adjective
+animate
+ ha-ppy
+ sad
+ sm-all
+ an-gry
+ lar-ge
+ fer-o-ci-ous
+ ti-mi-d
+ prou-d
+ tall
+ ex-ci-ted
+ wise
+ old
+ co-lor-ful
+ an-ci-ent
+ an-xious
+ ec-sta-tic
+ terr-i-fied
+ de-press-ed
+ sm-art
+ dumb
+ lazy
+ in-tell-i-gent
+ qui-et
+ lou-d
+ ti-red
+ de-di-cated
+ lone-ly
+ fun-ny
+ spe-cial
+ rude
+ ar-ro-gant
+ flu-ster-ed
+ fa-mous
+ pret-ty
+ youn-g
+ hair-y
+1
+adjective
+inanimate
+ fa-mous
+ pret-ty
+ cold
+ warm
+ old
+ co-lor-ful
+ an-ci-ent
+ new
+ sma-ll
+ tall
+ red
+ or-ange
+ yell-ow
+ blue
+1
+adjective
+place
+ fa-mous
+ pret-ty
+ cold
+ warm
+ old
+ co-lor-ful
+ an-ci-ent
+ new
+ sma-ll
+ tall
+ qui-et
+ loud
+1
+preposition
+ to
+noun,animate
+noun,inanimate
+noun,place
+verb
+ ran, quick-ly, slow-ly, clusm-ily, grace-ful-ly, of-ten, rare-ly, nev-er, careful-ly
+ talk-ed, quiet-ly, se-cret-ly
+ sang, quiet-ly
+ ga-ve
+ walk-ed, quick-ly, slow-ly, clusm-ily, grace-ful-ly, of-ten, rare-ly, nev-er, careful-ly
+ yell-ed, loud-ly, ex-ci-ted-ly, ru-de-ly
+ threw, quick-ly, vio-lent-ly, care-ful-ly
+ jump-ed, quick-ly, slow-ly
+ wa-ved, ex-ci-ted-ly, laz-ily, happ-ily, calm-ly 
+1
+preposition
+ about
+noun,animate
+noun,inanimate
+noun,place
+verb
+ talk-ed, proud-ly, loud-ly, quiet-ly, ar-ro-gant-ly, wist-ful-ly
+ thought, wist-ful-ly, of-ten, nev-er, rare-ly, care-ful-ly
+ com-plain-ed, loud-ly, anger-ly
+ drea-med, wist-ful-ly, of-ten, nev-er, rare-ly
+ wrote, wist-ful-ly, of-ten, nev-er, rare-ly
+ drew, wist-ful-ly, of-ten, nev-er, rare-ly
+ sang, beau-ti-fully, poor-ly, quiet-ly, loud-ly
+1
+preposition
+ for
+noun,animate
+noun,inanimate
+verb
+ wish-ed, des-par-et-ley, lo-ving-ly
+ sang, beau-ti-fully, poor-ly, quiet-ly, loud-ly
+ wrote, wist-ful-ly, of-ten, nev-er, rare-ly
+ drew, wist-ful-ly, of-ten, nev-er, rare-ly
+1
+preposition
+ in
+noun,place
+verb
+ ran, quick-ly, slow-ly, clusm-ily, grace-ful-ly, of-ten, rare-ly, nev-er, careful-ly
+ sle-pt
+1
+preposition
+ on
+noun,place
+noun,inanimate
+verb
+ fell
+ sat
+1
+direct object
+noun,animate
+noun,inanimate
+verb
+ call-ed
+ ate
+ saw
+ miss-ed

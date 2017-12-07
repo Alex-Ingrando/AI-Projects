@@ -25,7 +25,7 @@ public class Sentence {
 	//add subject (sentence specific)
 	void addSubject(String w) {
 		subject.addProperNoun(w);
-		subString.add(w);
+		subString.add(w.replace("-", ""));
 	}
 	//clear out the previous subjects
 	void clearSubject() {
@@ -45,7 +45,7 @@ public class Sentence {
 	void addProperNoun(String w) {
 		predicate.addDirectObjectNoun("animate", "proper", w);
 		predicate.addNounToPrepositions("animate", "proper", w);
-		charString.add(w);
+		charString.add(w.replace("-", ""));
 	}
 	
 	// sub + pred (+ conj + sub + pred)

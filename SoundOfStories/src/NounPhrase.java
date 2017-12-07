@@ -109,8 +109,10 @@ public class NounPhrase {
 	void clearNoun(String type, String word) {
 		if(type.equals("proper")) {
 			for(int i = 0; i < properNouns.size(); i++) {
-				if(properNouns.get(i).getWord().equals(word))
+				if(properNouns.get(i).getWord().equals(word)) {
+					System.out.println(properNouns.get(i).getWord() + " removed");
 					properNouns.remove(i);
+				}
 			}
 		} else if (type.equals("common")) {
 			for(int i = 0; i < commonNouns.size(); i++) {
